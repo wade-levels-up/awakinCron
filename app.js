@@ -1,6 +1,6 @@
 import cron from "node-cron";
+import Client from "pg";
 
-const { Client } = require("pg");
 // Railway automatically injects DATABASE_URL if linked
 const client = new Client({ connectionString: process.env.DATABASE_URL });
 
