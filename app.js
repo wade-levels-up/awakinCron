@@ -1,4 +1,3 @@
-import cron from "node-cron";
 import pg from "pg";
 
 // Railway automatically injects DATABASE_URL if linked
@@ -7,7 +6,6 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 async function decreaseStats() {
   try {
     await client.connect();
-    // Adjust the values (-5, -10, etc.) to fit your game's balance
     const query = `
       UPDATE "Character" 
       SET "hunger" = GREATEST(0, "hunger" - 5), 
@@ -25,7 +23,3 @@ async function decreaseStats() {
 }
 
 decreaseStats();
-
-cron.schedule("* * * * *", () => {
-  decreaseStats();
-});
