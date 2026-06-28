@@ -7,10 +7,10 @@ async function decreaseStats() {
   try {
     await client.connect();
     const query = `
-      UPDATE "Character" 
-      SET "hunger" = GREATEST(0, "hunger" - 5), 
-          "thirst" = GREATEST(0, "thirst" - 8);
-    `;
+    UPDATE "Character" 
+    SET "hunger" = GREATEST(0, "hunger" - 0.1984), 
+        "thirst" = GREATEST(0, "thirst" - 0.5208);
+  `;
     const res = await client.query(query);
     console.log(`Successfully updated ${res.rowCount} characters.`);
   } catch (err) {
