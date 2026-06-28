@@ -10,8 +10,8 @@ async function decreaseStats() {
     // Adjust the values (-5, -10, etc.) to fit your game's balance
     const query = `
       UPDATE "Character" 
-      SET "Hunger" = GREATEST(0, "hunger" - 5), 
-          "Thirst" = GREATEST(0, "thirst" - 8);
+      SET "hunger" = GREATEST(0, "hunger" - 5), 
+          "thirst" = GREATEST(0, "thirst" - 8);
     `;
     const res = await client.query(query);
     console.log(`Successfully updated ${res.rowCount} characters.`);
