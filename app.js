@@ -6,22 +6,36 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 async function decreaseStats() {
   try {
     await client.connect();
-    // Decay rates calculated for Railway cron running every 5 minutes (288 runs/day):
-    // Thirst: 100 / (3 days * 288 runs/day)  = ~0.1157 per run -> hits 0 in 3 days
-    // Hunger: 100 / (21 days * 288 runs/day) = ~0.0165 per run -> hits 0 in 21 days
+
+    // The query safely deducts points, prevents negative stats,
+    // and updates status to 'DEAD' if either stat reaches 0.
     const query = `
-      UPDATE "Character" 
-      SET "Hunger" = GREATEST(0, "Hunger" - 0.0165), 
-          "Thirst" = GREATEST(0, "Thirst" - 0.1157);
+      UPDATE "Character"
+      SET 
+        "hunger" = CASE 
+          WHEN "hunger" - 0.0165 <= 0 THEN 0 
+          ELSE "hunger" - 0.0165 
+        END,
+        "thirst" = CASE 
+          WHEN "thirst" - 0.1157 <= 0 THEN 0 
+          ELSE "thirst" - 0.1157 
+        END,
+        "status" = CASE 
+          WHEN "hunger" - 0.0165 <= 0 OR "thirst" - 0.1157 <= 0 THEN 'DEAD'
+          ELSE "status"
+        END
+      WHERE "status" = 'ALIVE' 
+        AND ("hunger" > 0 OR "thirst" > 0);
     `;
+
     const res = await client.query(query);
-    console.log(`Successfully updated ${res.rowCount} characters.`);
+    console.log(`Successfully processed stats for ${res.rowCount} characters.`);
   } catch (err) {
     console.error("Error executing query", err.stack);
     process.exit(1);
   } finally {
-    await client.end(); // Crucial: Closes connection so the Cron can terminate
-    process.exit(0); // Crucial: Signals Railway the job is safely finished
+    await client.end();
+    process.exit(0);
   }
 }
 
