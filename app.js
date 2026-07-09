@@ -1,4 +1,3 @@
-import cron from "node-cron";
 import pg from "pg";
 
 // Railway automatically injects DATABASE_URL if linked
@@ -7,11 +6,13 @@ const client = new pg.Client({ connectionString: process.env.DATABASE_URL });
 async function decreaseStats() {
   try {
     await client.connect();
-    // Adjust the values (-5, -10, etc.) to fit your game's balance
+    // Decay rates calculated for Railway cron running every 5 minutes (288 runs/day):
+    // Thirst: 100 / (3 days * 288 runs/day)  = ~0.1157 per run -> hits 0 in 3 days
+    // Hunger: 100 / (21 days * 288 runs/day) = ~0.0165 per run -> hits 0 in 21 days
     const query = `
       UPDATE "Character" 
-      SET "Hunger" = GREATEST(0, "Hunger" - 5), 
-          "Thirst" = GREATEST(0, "Thirst" - 8);
+      SET "Hunger" = GREATEST(0, "Hunger" - 0.0165), 
+          "Thirst" = GREATEST(0, "Thirst" - 0.1157);
     `;
     const res = await client.query(query);
     console.log(`Successfully updated ${res.rowCount} characters.`);
@@ -25,7 +26,3 @@ async function decreaseStats() {
 }
 
 decreaseStats();
-
-cron.schedule("* * * * *", () => {
-  decreaseStats();
-});
