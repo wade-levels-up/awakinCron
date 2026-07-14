@@ -37,7 +37,7 @@ async function hatchMysteryEggs() {
       AND oi."displayName" = 'Mystery Egg'
       AND cos."isPickedUp" = true
       AND cos."isDiscarded" = false
-      AND cos."collectedAt" <= NOW() - INTERVAL '3 minutes';
+      AND cos."collectedAt" <= NOW() - INTERVAL '3 days';
 
     INSERT INTO "Kin" (
       "id", "characterId", "name", "sex", "kinMeta", "currentHealth", "currentStamina"
@@ -55,7 +55,7 @@ async function hatchMysteryEggs() {
     WHERE oi."displayName" = 'Mystery Egg'
       AND cos."isPickedUp" = false
       AND cos."isDiscarded" = true
-      AND cos."collectedAt" <= NOW() - INTERVAL '3 minutes'
+      AND cos."collectedAt" <= NOW() - INTERVAL '3 days'
       AND NOT EXISTS (
         SELECT 1 FROM "Kin" k WHERE k."characterId" = cos."characterId"
   );
