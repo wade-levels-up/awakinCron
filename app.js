@@ -30,7 +30,8 @@ async function hatchMysteryEggs() {
     BEGIN;
 
     UPDATE "CharacterObjectState" cos
-    SET "isDiscarded" = true
+    SET "isDiscarded" = true,
+        "isPickedUp" = false
     FROM "ObjectInstance" oi
     WHERE cos."objectInstanceId" = oi.id
       AND oi."displayName" = 'Mystery Egg'
