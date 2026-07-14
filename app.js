@@ -53,12 +53,12 @@ async function hatchMysteryEggs() {
     FROM "CharacterObjectState" cos
     JOIN "ObjectInstance" oi ON cos."objectInstanceId" = oi.id
     WHERE oi."displayName" = 'Mystery Egg'
-      AND cos."isPickedUp" = true
+      AND cos."isPickedUp" = false
       AND cos."isDiscarded" = true
       AND cos."collectedAt" <= NOW() - INTERVAL '3 minutes'
       AND NOT EXISTS (
         SELECT 1 FROM "Kin" k WHERE k."characterId" = cos."characterId"
-      );
+  );
 
     COMMIT;
   `;
