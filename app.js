@@ -25,7 +25,29 @@ async function decreaseStats() {
   console.log(`Successfully processed stats for ${res.rowCount} characters.`);
 }
 
+const KIN_TYPES = [
+  {
+    // Turtle Type
+    breeds: [
+      { type: "dragon", influence: 0.2 },
+      { type: "turtle", influence: 0.8 },
+    ],
+    skinColor: "#3292e0",
+  },
+  {
+    // Dragon Type
+    breeds: [
+      { type: "dragon", influence: 0.8 },
+      { type: "turtle", influence: 0.2 },
+    ],
+    skinColor: "#e03232",
+  },
+];
+
 async function hatchMysteryEggs() {
+  const kin = KIN_TYPES[Math.floor(Math.random() * KIN_TYPES.length)];
+  const kinMeta = JSON.stringify(kin);
+
   const query = `
     BEGIN;
 
@@ -45,9 +67,9 @@ async function hatchMysteryEggs() {
     SELECT
       gen_random_uuid(),
       cos."characterId",
-      'Mystery Kin',
-      'unknown',
-      '{"breeds":[{"type":"dragon","influence":0.2},{"type":"turtle","influence":0.8}],"skinColor":"#3292e0"}'::jsonb,
+      'Unnamed',
+      'male',
+      $1::jsonb,
       100,
       50
     FROM "CharacterObjectState" cos
@@ -62,7 +84,7 @@ async function hatchMysteryEggs() {
 
     COMMIT;
   `;
-  const res = await client.query(query);
+  const res = await client.query(query, [kinMeta]);
   console.log(`Hatched eggs processed.`);
 }
 
