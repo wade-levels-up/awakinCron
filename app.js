@@ -48,44 +48,53 @@ async function hatchMysteryEggs() {
   const kin = KIN_TYPES[Math.floor(Math.random() * KIN_TYPES.length)];
   const kinMeta = JSON.stringify(kin);
 
-  const query = `
-    BEGIN;
+  try {
+    await client.query("BEGIN");
 
-    UPDATE "CharacterObjectState" cos
-    SET "isDiscarded" = true,
-        "isPickedUp" = false
-    FROM "ObjectInstance" oi
-    WHERE cos."objectInstanceId" = oi.id
-      AND oi."displayName" = 'Mystery Egg'
-      AND cos."isPickedUp" = true
-      AND cos."isDiscarded" = false
-      AND cos."collectedAt" <= NOW() - INTERVAL '3 days';
+    await client.query(`
+      UPDATE "CharacterObjectState" cos
+      SET "isDiscarded" = true,
+          "isPickedUp" = false
+      FROM "ObjectInstance" oi
+      WHERE cos."objectInstanceId" = oi.id
+        AND oi."displayName" = 'Mystery Egg'
+        AND cos."isPickedUp" = true
+        AND cos."isDiscarded" = false
+        AND cos."collectedAt" <= NOW() - INTERVAL '3 days'
+    `);
 
-    INSERT INTO "Kin" (
-      "id", "characterId", "name", "sex", "kinMeta", "currentHealth", "currentStamina"
-    )
-    SELECT
-      gen_random_uuid(),
-      cos."characterId",
-      'Unnamed',
-      'male',
-      $1::jsonb,
-      100,
-      50
-    FROM "CharacterObjectState" cos
-    JOIN "ObjectInstance" oi ON cos."objectInstanceId" = oi.id
-    WHERE oi."displayName" = 'Mystery Egg'
-      AND cos."isPickedUp" = false
-      AND cos."isDiscarded" = true
-      AND cos."collectedAt" <= NOW() - INTERVAL '3 days'
-      AND NOT EXISTS (
-        SELECT 1 FROM "Kin" k WHERE k."characterId" = cos."characterId"
-  );
+    await client.query(
+      `
+      INSERT INTO "Kin" (
+        "id", "characterId", "name", "sex", "kinMeta", "currentHealth", "currentStamina"
+      )
+      SELECT
+        gen_random_uuid(),
+        cos."characterId",
+        'Unnamed',
+        'male',
+        $1::jsonb,
+        100,
+        50
+      FROM "CharacterObjectState" cos
+      JOIN "ObjectInstance" oi ON cos."objectInstanceId" = oi.id
+      WHERE oi."displayName" = 'Mystery Egg'
+        AND cos."isPickedUp" = false
+        AND cos."isDiscarded" = true
+        AND cos."collectedAt" <= NOW() - INTERVAL '3 days'
+        AND NOT EXISTS (
+          SELECT 1 FROM "Kin" k WHERE k."characterId" = cos."characterId"
+        )
+    `,
+      [kinMeta],
+    );
 
-    COMMIT;
-  `;
-  const res = await client.query(query, [kinMeta]);
-  console.log(`Hatched eggs processed.`);
+    await client.query("COMMIT");
+    console.log(`Hatched eggs processed.`);
+  } catch (err) {
+    await client.query("ROLLBACK");
+    throw err;
+  }
 }
 
 async function main() {
